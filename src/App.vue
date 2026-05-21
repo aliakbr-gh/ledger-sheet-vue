@@ -4,30 +4,30 @@ import { ref, onMounted, onUnmounted, reactive, watch, computed } from "vue";
 const DEBUG = false;
 
 const sheet = reactive({
-    telenorOpeningBalance: null,
-    jazzOpeningBalance: null,
-    ufoneOpeningBalance: null,
-    zongOpeningBalance: null,
+    telenorOpeningBalance: 0,
+    jazzOpeningBalance: 0,
+    ufoneOpeningBalance: 0,
+    zongOpeningBalance: 0,
 
-    telenorNewBalance: null,
-    jazzNewBalance: null,
-    ufoneNewBalance: null,
-    zongNewBalance: null,
+    telenorNewBalance: 0,
+    jazzNewBalance: 0,
+    ufoneNewBalance: 0,
+    zongNewBalance: 0,
 
-    telenorReversalBalance: null,
-    jazzReversalBalance: null,
-    ufoneReversalBalance: null,
-    zongReversalBalance: null,
+    telenorReversalBalance: 0,
+    jazzReversalBalance: 0,
+    ufoneReversalBalance: 0,
+    zongReversalBalance: 0,
 
-    telenorClosingBalance: null,
-    jazzClosingBalance: null,
-    ufoneClosingBalance: null,
-    zongClosingBalance: null,
+    telenorClosingBalance: 0,
+    jazzClosingBalance: 0,
+    ufoneClosingBalance: 0,
+    zongClosingBalance: 0,
 
-    accountBalance265999891: null,
-    accountBalance266001445: null,
-    accountBalance37300247: null,
-    accountBalance257283991: null,
+    accountBalance265999891: 0,
+    accountBalance266001445: 0,
+    accountBalance37300247: 0,
+    accountBalance257283991: 0,
 
     borrow: Array.from({ length: 12 }, () => ({
         name: "",
@@ -39,18 +39,18 @@ const sheet = reactive({
         amount: null as number | null,
     })),
 
-    deposit265999891: null,
-    deposit266001445: null,
-    deposit37300247: null,
-    deposit257283991: null,
+    deposit265999891: 0,
+    deposit266001445: 0,
+    deposit37300247: 0,
+    deposit257283991: 0,
 
-    withdrawl265999891: null,
-    withdrawl266001445: null,
-    withdrawl37300247: null,
-    withdrawl257283991: null,
+    withdrawl265999891: 0,
+    withdrawl266001445: 0,
+    withdrawl37300247: 0,
+    withdrawl257283991: 0,
 
-    totalCards: null,
-    sellCards: null,
+    totalCards: 0,
+    sellCards: 0,
 });
 
 const savedSheet = localStorage.getItem("sheet");
@@ -90,7 +90,8 @@ watch(
 
 const clearSheet = () => {
     Object.keys(sheet).forEach((key) => {
-        sheet[key as keyof typeof sheet] = null;
+        const k = key as keyof typeof sheet;
+        (sheet as any)[k] = null;
     });
 
     sheet.borrow = Array.from({ length: 12 }, () => ({
