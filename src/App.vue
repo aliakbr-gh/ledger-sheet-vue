@@ -3,31 +3,74 @@ import { ref, onMounted, onUnmounted, reactive, watch, computed } from "vue";
 
 const DEBUG = false;
 
-const sheet = reactive({
-    telenorOpeningBalance: 0,
-    jazzOpeningBalance: 0,
-    ufoneOpeningBalance: 0,
-    zongOpeningBalance: 0,
+type Sheet = {
+  telenorOpeningBalance: number | null;
+  jazzOpeningBalance: number | null;
+  ufoneOpeningBalance: number | null;
+  zongOpeningBalance: number | null;
 
-    telenorNewBalance: 0,
-    jazzNewBalance: 0,
-    ufoneNewBalance: 0,
-    zongNewBalance: 0,
+  telenorNewBalance: number | null;
+  jazzNewBalance: number | null;
+  ufoneNewBalance: number | null;
+  zongNewBalance: number | null;
 
-    telenorReversalBalance: 0,
-    jazzReversalBalance: 0,
-    ufoneReversalBalance: 0,
-    zongReversalBalance: 0,
+  telenorReversalBalance: number | null;
+  jazzReversalBalance: number | null;
+  ufoneReversalBalance: number | null;
+  zongReversalBalance: number | null;
 
-    telenorClosingBalance: 0,
-    jazzClosingBalance: 0,
-    ufoneClosingBalance: 0,
-    zongClosingBalance: 0,
+  telenorClosingBalance: number | null;
+  jazzClosingBalance: number | null;
+  ufoneClosingBalance: number | null;
+  zongClosingBalance: number | null;
 
-    accountBalance265999891: 0,
-    accountBalance266001445: 0,
-    accountBalance37300247: 0,
-    accountBalance257283991: 0,
+  accountBalance265999891: number | null;
+  accountBalance266001445: number | null;
+  accountBalance37300247: number | null;
+  accountBalance257283991: number | null;
+
+  borrow: { name: string; amount: number | null }[];
+  recovery: { name: string; amount: number | null }[];
+
+  deposit265999891: number | null;
+  deposit266001445: number | null;
+  deposit37300247: number | null;
+  deposit257283991: number | null;
+
+  withdrawl265999891: number | null;
+  withdrawl266001445: number | null;
+  withdrawl37300247: number | null;
+  withdrawl257283991: number | null;
+
+  totalCards: number | null;
+  sellCards: number | null;
+};
+
+const sheet = reactive<Sheet>({
+    telenorOpeningBalance: null,
+    jazzOpeningBalance: null,
+    ufoneOpeningBalance: null,
+    zongOpeningBalance: null,
+
+    telenorNewBalance: null,
+    jazzNewBalance: null,
+    ufoneNewBalance: null,
+    zongNewBalance: null,
+
+    telenorReversalBalance: null,
+    jazzReversalBalance: null,
+    ufoneReversalBalance: null,
+    zongReversalBalance: null,
+
+    telenorClosingBalance: null,
+    jazzClosingBalance: null,
+    ufoneClosingBalance: null,
+    zongClosingBalance: null,
+
+    accountBalance265999891: null,
+    accountBalance266001445: null,
+    accountBalance37300247: null,
+    accountBalance257283991: null,
 
     borrow: Array.from({ length: 12 }, () => ({
         name: "",
@@ -39,18 +82,18 @@ const sheet = reactive({
         amount: null as number | null,
     })),
 
-    deposit265999891: 0,
-    deposit266001445: 0,
-    deposit37300247: 0,
-    deposit257283991: 0,
+    deposit265999891: null,
+    deposit266001445: null,
+    deposit37300247: null,
+    deposit257283991: null,
 
-    withdrawl265999891: 0,
-    withdrawl266001445: 0,
-    withdrawl37300247: 0,
-    withdrawl257283991: 0,
+    withdrawl265999891: null,
+    withdrawl266001445: null,
+    withdrawl37300247: null,
+    withdrawl257283991: null,
 
-    totalCards: 0,
-    sellCards: 0,
+    totalCards: null,
+    sellCards: null,
 });
 
 const savedSheet = localStorage.getItem("sheet");
@@ -89,22 +132,25 @@ watch(
 );
 
 const clearSheet = () => {
-    Object.keys(sheet).forEach((key) => {
-        const k = key as keyof typeof sheet;
-        (sheet as any)[k] = null;
-    });
+  Object.keys(sheet).forEach((key) => {
+    const k = key as keyof Sheet;
 
-    sheet.borrow = Array.from({ length: 12 }, () => ({
+    const value = sheet[k];
+
+    if (Array.isArray(value)) {
+      (sheet as any)[k] = value.map(() => ({
         name: "",
         amount: null,
-    }));
+      }));
+    } else if (typeof value === "number" || value === null) {
+      (sheet as any)[k] = null;
+    }
+  });
 
-    sheet.recovery = Array.from({ length: 12 }, () => ({
-        name: "",
-        amount: null,
-    }));
-    localStorage.removeItem("sheet");
+  localStorage.removeItem("sheet");
 };
+
+const n = (v: number | null | undefined) => v ?? 0;
 
 // Header
 const dateTime = ref({
@@ -279,16 +325,16 @@ const recoveryTotal = computed(() => {
                                     <tr>
                                         <td>Total Rs</td>
                                         <td><input
-                                                :value="sheet.telenorOpeningBalance + sheet.telenorNewBalance + sheet.telenorReversalBalance"
+                                                :value="n(sheet.telenorOpeningBalance) + n(sheet.telenorNewBalance) + n(sheet.telenorReversalBalance)"
                                                 type="number" disabled /></td>
                                         <td><input
-                                                :value="sheet.jazzOpeningBalance + sheet.jazzNewBalance + sheet.jazzReversalBalance"
+                                                :value="n(sheet.jazzOpeningBalance) + n(sheet.jazzNewBalance) + n(sheet.jazzReversalBalance)"
                                                 type="number" disabled /></td>
                                         <td><input
-                                                :value="sheet.ufoneOpeningBalance + sheet.ufoneNewBalance + sheet.ufoneReversalBalance"
+                                                :value="n(sheet.ufoneOpeningBalance) + n(sheet.ufoneNewBalance) + n(sheet.ufoneReversalBalance)"
                                                 type="number" disabled /></td>
                                         <td><input
-                                                :value="sheet.zongOpeningBalance + sheet.zongNewBalance + sheet.zongReversalBalance"
+                                                :value="n(sheet.zongOpeningBalance) + n(sheet.zongNewBalance) + n(sheet.zongReversalBalance)"
                                                 type="number" disabled /></td>
                                     </tr>
 
@@ -380,13 +426,13 @@ const recoveryTotal = computed(() => {
 
                                     <tr>
                                         <td>Total Rs</td>
-                                        <td><input :value="sheet.accountBalance265999891 + sheet.deposit265999891"
+                                        <td><input :value="n(sheet.accountBalance265999891) + n(sheet.deposit265999891)"
                                                 type="number" disabled /></td>
-                                        <td><input :value="sheet.accountBalance266001445 + sheet.deposit266001445"
+                                        <td><input :value="n(sheet.accountBalance266001445) + n(sheet.deposit266001445)"
                                                 type="number" disabled /></td>
-                                        <td><input :value="sheet.accountBalance37300247 + sheet.deposit37300247"
+                                        <td><input :value="n(sheet.accountBalance37300247) + n(sheet.deposit37300247)"
                                                 type="number" disabled /></td>
-                                        <td><input :value="sheet.accountBalance257283991 + sheet.deposit257283991"
+                                        <td><input :value="n(sheet.accountBalance257283991) + n(sheet.deposit257283991)"
                                                 type="number" disabled /></td>
                                     </tr>
 
@@ -401,16 +447,16 @@ const recoveryTotal = computed(() => {
                                     <tr>
                                         <td>Remaining Balance</td>
                                         <td><input
-                                                :value="(sheet.accountBalance265999891 + sheet.deposit265999891) - sheet.withdrawl265999891"
+                                                :value="(n(sheet.accountBalance265999891) + n(sheet.deposit265999891)) - n(sheet.withdrawl265999891)"
                                                 type="number" disabled /></td>
                                         <td><input
-                                                :value="(sheet.accountBalance266001445 + sheet.deposit266001445) - sheet.withdrawl266001445"
+                                                :value="(n(sheet.accountBalance266001445) + n(sheet.deposit266001445)) - n(sheet.withdrawl266001445)"
                                                 type="number" disabled /></td>
                                         <td><input
-                                                :value="(sheet.accountBalance37300247 + sheet.deposit37300247) - sheet.withdrawl37300247"
+                                                :value="(n(sheet.accountBalance37300247) + n(sheet.deposit37300247)) - n(sheet.withdrawl37300247)"
                                                 type="number" disabled /></td>
                                         <td><input
-                                                :value="(sheet.accountBalance257283991 + sheet.deposit257283991) - sheet.withdrawl257283991"
+                                                :value="(n(sheet.accountBalance257283991) + n(sheet.deposit257283991)) - n(sheet.withdrawl257283991)"
                                                 type="number" disabled /></td>
                                     </tr>
                                 </tbody>
@@ -433,7 +479,7 @@ const recoveryTotal = computed(() => {
                                     </tr>
                                     <tr>
                                         <td>Remaining</td>
-                                        <td><input :value="sheet.totalCards - sheet.sellCards" type="number" disabled />
+                                        <td><input :value="n(sheet.totalCards) - n(sheet.sellCards)" type="number" disabled />
                                         </td>
                                     </tr>
                                 </tbody>
