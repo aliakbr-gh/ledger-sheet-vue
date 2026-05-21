@@ -1,9 +1,242 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from "vue";
+
+const DEBUG = false;
+
+// Header
+const dateTime = ref({
+    date: "",
+    time: "",
+});
+
+const updateDateTime = () => {
+    const now = new Date();
+
+    dateTime.value.date = now.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+
+    dateTime.value.time = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+};
+
+let interval: number;
+
+onMounted(() => {
+    updateDateTime();
+
+    interval = window.setInterval(() => {
+        updateDateTime();
+    }, 1000);
+});
+
+onUnmounted(() => {
+    clearInterval(interval);
+});
 </script>
 
 <template>
-<h1>Hello</h1>
+    <div id="print-area">
+        <div class="container">
+            <div class="header">
+                <div class="title-container">
+                    <h1>KMK Communication</h1>
+                </div>
+                <div class="time-actions-container">
+                    <h2 id="current-date">{{ dateTime.date }}</h2>
+                    <h2 id="current-time">{{ dateTime.time }}</h2>
+                    <div class="actions no-print">
+                        <button class="button" @click="console.log('Save PDF Clicked')">
+                            Save PDF
+                        </button>
+                        <button class="button-danger" @click="console.log('Save PDF Clicked')">
+                            Clear Sheet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    font-weight: bold;
+}
+
+table,
+tr,
+th,
+td {
+    border: 1px solid black;
+}
+
+input {
+    width: 100px;
+    color: black;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
+    border: none;
+    height: 100%;
+    outline: none;
+}
+
+input:disabled {
+    background-color: #f0f0f0;
+}
+
+.mx {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.my {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.space-x {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.space-y {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.text-sm {
+    font-size: 15px;
+}
+
+.text-lg {
+    font-size: 25px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.button {
+    color: white;
+    background-color: #1d4ed8;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #1e40af;
+}
+
+.button-danger {
+    color: white;
+    background-color: #c53030;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.button-danger:hover {
+    background-color: #b91c1c;
+}
+
+.container {
+    width: 100%;
+    padding: 10px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.time-actions-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 50px;
+}
+
+.eload-accounts-container {
+    display: flex;
+    gap: 130px;
+    align-items: start;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.easyload-container,
+.accounts-container {
+    display: flex;
+    gap: 10px;
+    align-items: start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.borrow-recovery-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.statements-container {
+    display: flex;
+    gap: 10px;
+    align-items: start;
+    justify-content: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.analytics-container {
+    display: flex;
+    gap: 82px;
+    align-items: start;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0;
+}
 </style>
