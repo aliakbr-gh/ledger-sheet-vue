@@ -4,46 +4,59 @@ import { ref, onMounted, onUnmounted, reactive, watch, computed } from "vue";
 const DEBUG = false;
 
 type Sheet = {
-  telenorOpeningBalance: number | null;
-  jazzOpeningBalance: number | null;
-  ufoneOpeningBalance: number | null;
-  zongOpeningBalance: number | null;
+    telenorOpeningBalance: number | null;
+    jazzOpeningBalance: number | null;
+    ufoneOpeningBalance: number | null;
+    zongOpeningBalance: number | null;
 
-  telenorNewBalance: number | null;
-  jazzNewBalance: number | null;
-  ufoneNewBalance: number | null;
-  zongNewBalance: number | null;
+    telenorNewBalance: number | null;
+    jazzNewBalance: number | null;
+    ufoneNewBalance: number | null;
+    zongNewBalance: number | null;
 
-  telenorReversalBalance: number | null;
-  jazzReversalBalance: number | null;
-  ufoneReversalBalance: number | null;
-  zongReversalBalance: number | null;
+    telenorReversalBalance: number | null;
+    jazzReversalBalance: number | null;
+    ufoneReversalBalance: number | null;
+    zongReversalBalance: number | null;
 
-  telenorClosingBalance: number | null;
-  jazzClosingBalance: number | null;
-  ufoneClosingBalance: number | null;
-  zongClosingBalance: number | null;
+    telenorClosingBalance: number | null;
+    jazzClosingBalance: number | null;
+    ufoneClosingBalance: number | null;
+    zongClosingBalance: number | null;
 
-  accountBalance265999891: number | null;
-  accountBalance266001445: number | null;
-  accountBalance37300247: number | null;
-  accountBalance257283991: number | null;
+    accountBalance265999891: number | null;
+    accountBalance266001445: number | null;
+    accountBalance37300247: number | null;
+    accountBalance257283991: number | null;
 
-  borrow: { name: string; amount: number | null }[];
-  recovery: { name: string; amount: number | null }[];
+    borrow: { name: string; amount: number | null }[];
+    recovery: { name: string; amount: number | null }[];
 
-  deposit265999891: number | null;
-  deposit266001445: number | null;
-  deposit37300247: number | null;
-  deposit257283991: number | null;
+    deposit265999891: number | null;
+    deposit266001445: number | null;
+    deposit37300247: number | null;
+    deposit257283991: number | null;
 
-  withdrawl265999891: number | null;
-  withdrawl266001445: number | null;
-  withdrawl37300247: number | null;
-  withdrawl257283991: number | null;
+    withdrawl265999891: number | null;
+    withdrawl266001445: number | null;
+    withdrawl37300247: number | null;
+    withdrawl257283991: number | null;
 
-  totalCards: number | null;
-  sellCards: number | null;
+    totalCards: number | null;
+    sellCards: number | null;
+
+    redBook: { name: string; amount: number | null }[];
+
+    extra: number | null,
+
+    cash5000: number | null;
+    cash1000: number | null;
+    cash500: number | null;
+    cash100: number | null;
+    cash50: number | null;
+    cash20: number | null;
+    cash10: number | null;
+    cash5: number | null;
 };
 
 const sheet = reactive<Sheet>({
@@ -94,6 +107,22 @@ const sheet = reactive<Sheet>({
 
     totalCards: null,
     sellCards: null,
+
+    redBook: Array.from({ length: 8 }, () => ({
+        name: "",
+        amount: null as number | null,
+    })),
+
+    extra: null,
+
+    cash5000: null,
+    cash1000: null,
+    cash500: null,
+    cash100: null,
+    cash50: null,
+    cash20: null,
+    cash10: null,
+    cash5: null,
 });
 
 const savedSheet = localStorage.getItem("sheet");
@@ -132,22 +161,22 @@ watch(
 );
 
 const clearSheet = () => {
-  Object.keys(sheet).forEach((key) => {
-    const k = key as keyof Sheet;
+    Object.keys(sheet).forEach((key) => {
+        const k = key as keyof Sheet;
 
-    const value = sheet[k];
+        const value = sheet[k];
 
-    if (Array.isArray(value)) {
-      (sheet as any)[k] = value.map(() => ({
-        name: "",
-        amount: null,
-      }));
-    } else if (typeof value === "number" || value === null) {
-      (sheet as any)[k] = null;
-    }
-  });
+        if (Array.isArray(value)) {
+            (sheet as any)[k] = value.map(() => ({
+                name: "",
+                amount: null,
+            }));
+        } else if (typeof value === "number" || value === null) {
+            (sheet as any)[k] = null;
+        }
+    });
 
-  localStorage.removeItem("sheet");
+    localStorage.removeItem("sheet");
 };
 
 const n = (v: number | null | undefined) => v ?? 0;
@@ -251,6 +280,26 @@ const recoveryTotal = computed(() => {
     return sheet.recovery.reduce(
         (sum, item) => sum + (Number(item.amount) || 0),
         0
+    );
+});
+
+const redBookTotal = computed(() => {
+    return sheet.redBook.reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+    );
+});
+
+const cashTotal = computed(() => {
+    return (
+        5000 * n(sheet.cash5000) +
+        1000 * n(sheet.cash1000) +
+        500 * n(sheet.cash500) +
+        100 * n(sheet.cash100) +
+        50 * n(sheet.cash50) +
+        20 * n(sheet.cash20) +
+        10 * n(sheet.cash10) +
+        5 * n(sheet.cash5)
     );
 });
 
@@ -479,7 +528,8 @@ const recoveryTotal = computed(() => {
                                     </tr>
                                     <tr>
                                         <td>Remaining</td>
-                                        <td><input :value="n(sheet.totalCards) - n(sheet.sellCards)" type="number" disabled />
+                                        <td><input :value="n(sheet.totalCards) - n(sheet.sellCards)" type="number"
+                                                disabled />
                                         </td>
                                     </tr>
                                 </tbody>
@@ -877,67 +927,66 @@ const recoveryTotal = computed(() => {
                             <tr>
                                 <th colspan="4">Cash Detail</th>
                             </tr>
-
                             <tr>
                                 <td>5000</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash5000" type="number" /></td>
+                                <td><input :value="5000 * n(sheet.cash5000)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>1000</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash1000" type="number" /></td>
+                                <td><input :value="1000 * n(sheet.cash1000)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>500</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash500" type="number" /></td>
+                                <td><input :value="500 * n(sheet.cash500)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>100</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash100" type="number" /></td>
+                                <td><input :value="100 * n(sheet.cash100)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>50</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash50" type="number" /></td>
+                                <td><input :value="50 * n(sheet.cash50)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>20</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash20" type="number" /></td>
+                                <td><input :value="20 * n(sheet.cash20)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>10</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash10" type="number" /></td>
+                                <td><input :value="10 * n(sheet.cash10)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td>5</td>
                                 <td>x</td>
-                                <td><input type="number" /></td>
-                                <td><input type="number" disabled /></td>
+                                <td><input v-model="sheet.cash5" type="number" /></td>
+                                <td><input :value="5 * n(sheet.cash5)" type="number" disabled /></td>
                             </tr>
 
                             <tr>
                                 <td colspan="3">Total</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="cashTotal" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -998,21 +1047,18 @@ const recoveryTotal = computed(() => {
                             <tr>
                                 <th colspan="2">RED Book</th>
                             </tr>
-
-                            <tr v-for="index in 8" :key="index">
+                            <tr v-for="(row, index) in sheet.redBook" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.name" />
                                 </td>
-
                                 <td>
-                                    <input type="number" />
+                                    <input type="number" v-model.number="row.amount" />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>Total</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input type="number" :value="redBookTotal" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -1064,21 +1110,21 @@ const recoveryTotal = computed(() => {
                             <tr>
                                 <td>Card</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="100 * n(sheet.sellCards)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>EasyLoad</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="totalELoad" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Extra</td>
                                 <td>
-                                    <input type="number" />
+                                    <input v-model.number="sheet.extra" type="number" />
                                 </td>
                             </tr>
 
