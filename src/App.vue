@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, reactive, watch, computed } from "vue";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const DEBUG = false;
 
@@ -433,6 +435,97 @@ const cashTotal = computed(() => {
     );
 });
 
+const handleDownloadPDF = async () => {
+    const element = document.getElementById("print-area");
+
+    if (!element) return;
+
+    // Hide buttons while generating PDF
+    const noPrintEls = document.querySelectorAll(".no-print");
+
+    noPrintEls.forEach((el) => {
+        (el as HTMLElement).style.display = "none";
+    });
+
+    try {
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+        });
+
+        // Show buttons again
+        noPrintEls.forEach((el) => {
+            (el as HTMLElement).style.display = "";
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 1.0);
+
+        const pdf = new jsPDF({
+            orientation: "landscape",
+            unit: "mm",
+            format: "a4",
+        });
+
+        const pageWidth = 297;
+        const pageHeight = 210;
+
+        const imgWidth = pageWidth;
+
+        const imgHeight =
+            (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(
+            imgData,
+            "JPEG",
+            0,
+            position,
+            imgWidth,
+            imgHeight
+        );
+
+        heightLeft -= pageHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+
+            pdf.addPage();
+
+            pdf.addImage(
+                imgData,
+                "JPEG",
+                0,
+                position,
+                imgWidth,
+                imgHeight
+            );
+
+            heightLeft -= pageHeight;
+        }
+
+        const now = new Date();
+
+        const day = String(now.getDate()).padStart(2, "0");
+
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+
+        const year = now.getFullYear();
+
+        pdf.save(
+            `KMKCommunicationSheet-${day}-${month}-${year}.pdf`
+        );
+    } catch (error) {
+        console.error("PDF Generation Failed:", error);
+
+        noPrintEls.forEach((el) => {
+            (el as HTMLElement).style.display = "";
+        });
+    }
+};
+
 </script>
 
 <template>
@@ -453,7 +546,7 @@ const cashTotal = computed(() => {
                     <h2 id="current-date">{{ dateTime.date }}</h2>
                     <h2 id="current-time">{{ dateTime.time }}</h2>
                     <div class="actions no-print">
-                        <button class="button" @click="console.log('Save PDF Clicked')">
+                        <button class="button" @click="handleDownloadPDF">
                             Save PDF
                         </button>
                         <button class="button-danger" @click="clearSheet">
@@ -1274,179 +1367,3 @@ const cashTotal = computed(() => {
         </div>
     </div>
 </template>
-
-<style scoped>
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    font-weight: bold;
-}
-
-table,
-tr,
-th,
-td {
-    border: 1px solid black;
-}
-
-input {
-    width: 100px;
-    color: black;
-    text-align: center;
-    font-weight: bold;
-    font-size: 15px;
-    border: none;
-    height: 100%;
-    outline: none;
-}
-
-input:disabled {
-    background-color: #f0f0f0;
-}
-
-.mx {
-    margin-left: 5px;
-    margin-right: 5px;
-}
-
-.my {
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-.space-x {
-    margin-left: 10px;
-    margin-right: 10px;
-}
-
-.space-y {
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-.text-sm {
-    font-size: 15px;
-}
-
-.text-lg {
-    font-size: 25px;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.button {
-    color: white;
-    background-color: #1d4ed8;
-    padding: 0.625rem 1.25rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: 0.875rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: background-color 0.3s, box-shadow 0.3s;
-    border: none;
-    cursor: pointer;
-}
-
-.button:hover {
-    background-color: #1e40af;
-}
-
-.button-danger {
-    color: white;
-    background-color: #c53030;
-    padding: 0.625rem 1.25rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: 0.875rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: background-color 0.3s, box-shadow 0.3s;
-    border: none;
-    cursor: pointer;
-}
-
-.button-danger:hover {
-    background-color: #b91c1c;
-}
-
-.container {
-    width: 100%;
-    padding: 10px;
-    margin: 0 auto;
-}
-
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.time-actions-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 50px;
-}
-
-.eload-accounts-container {
-    display: flex;
-    gap: 130px;
-    align-items: start;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.easyload-container,
-.accounts-container {
-    display: flex;
-    gap: 10px;
-    align-items: start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}
-
-.borrow-recovery-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.statements-container {
-    display: flex;
-    gap: 10px;
-    align-items: start;
-    justify-content: center;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-}
-
-.analytics-container {
-    display: flex;
-    gap: 82px;
-    align-items: start;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    margin: 0;
-}
-</style>
