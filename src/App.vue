@@ -45,9 +45,18 @@ type Sheet = {
     totalCards: number | null;
     sellCards: number | null;
 
+    omni: { sending: string; receiving: string }[];
+    easypaisa: { sending: string; receiving: string }[];
+    jazzcash: { sending: string; receiving: string }[];
+    epaccount: { sending: string; receiving: string }[];
+    jcaccount: { sending: string; receiving: string }[];
+    manualpurchasing: { name: string; amount: number | null }[];
+
     redBook: { name: string; amount: number | null }[];
 
     extra: number | null,
+
+    previousCash: number | null,
 
     cash5000: number | null;
     cash1000: number | null;
@@ -108,12 +117,44 @@ const sheet = reactive<Sheet>({
     totalCards: null,
     sellCards: null,
 
+    omni: Array.from({ length: 11 }, () => ({
+        sending: "",
+        receiving: "",
+    })),
+
+    easypaisa: Array.from({ length: 11 }, () => ({
+        sending: "",
+        receiving: "",
+    })),
+
+    jazzcash: Array.from({ length: 11 }, () => ({
+        sending: "",
+        receiving: "",
+    })),
+
+    epaccount: Array.from({ length: 11 }, () => ({
+        sending: "",
+        receiving: "",
+    })),
+
+    jcaccount: Array.from({ length: 11 }, () => ({
+        sending: "",
+        receiving: "",
+    })),
+
+    manualpurchasing: Array.from({ length: 10 }, () => ({
+        name: "",
+        amount: null,
+    })),
+
     redBook: Array.from({ length: 8 }, () => ({
         name: "",
         amount: null as number | null,
     })),
 
     extra: null,
+
+    previousCash: null,
 
     cash5000: null,
     cash1000: null,
@@ -179,7 +220,61 @@ const clearSheet = () => {
     localStorage.removeItem("sheet");
 };
 
+
+// Helper Functions
 const n = (v: number | null | undefined) => v ?? 0;
+
+const isPureNumber = (val: string | number | null | undefined) => {
+    if (typeof val === "number") return true;
+
+    if (typeof val === "string") {
+        return /^\d+(\.\d+)?$/.test(val);
+    }
+
+    return false;
+};
+
+const getTotalSending = (
+    entries: { sending: string; receiving: string }[]
+) => {
+    return entries.reduce((sum, entry) => {
+        return sum + (isPureNumber(entry.sending)
+            ? Number(entry.sending)
+            : 0);
+    }, 0);
+};
+
+const getTotalReceiving = (
+    entries: { sending: string; receiving: string }[]
+) => {
+    return entries.reduce((sum, entry) => {
+        return sum + (isPureNumber(entry.receiving)
+            ? Number(entry.receiving)
+            : 0);
+    }, 0);
+};
+
+const extractLastBalance = (
+    entries: { sending: string; receiving: string }[]
+) => {
+    const regex = /b\s+(\d+)/i;
+
+    for (let i = entries.length - 1; i >= 0; i--) {
+        const sendMatch = regex.exec(entries[i]?.sending || "");
+
+        if (sendMatch) {
+            return Number(sendMatch[1]);
+        }
+
+        const receiveMatch = regex.exec(entries[i]?.receiving || "");
+
+        if (receiveMatch) {
+            return Number(receiveMatch[1]);
+        }
+    }
+
+    return null;
+};
 
 // Header
 const dateTime = ref({
@@ -278,6 +373,41 @@ const borrowTotal = computed(() => {
 
 const recoveryTotal = computed(() => {
     return sheet.recovery.reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+    );
+});
+
+const purchasingTotal = computed(() => {
+    return (
+        getTotalReceiving(sheet.omni) +
+        getTotalReceiving(sheet.easypaisa) +
+        getTotalReceiving(sheet.jazzcash) +
+        getTotalReceiving(sheet.epaccount) +
+        getTotalReceiving(sheet.jcaccount) +
+        sheet.manualpurchasing.reduce(
+            (sum, item) => sum + (Number(item.amount) || 0),
+            0
+        )
+    );
+});
+
+const cashInfoTotal = computed(() => {
+    return (
+        getTotalSending(sheet.omni) +
+        getTotalSending(sheet.easypaisa) +
+        getTotalSending(sheet.jazzcash) +
+        getTotalSending(sheet.epaccount) +
+        getTotalSending(sheet.jcaccount) +
+        recoveryTotal.value +
+        (100 * n(sheet.sellCards)) +
+        totalELoad.value +
+        n(sheet.extra)
+    );
+});
+
+const manualPurchasingTotal = computed(() => {
+    return sheet.manualpurchasing.reduce(
         (sum, item) => sum + (Number(item.amount) || 0),
         0
     );
@@ -611,34 +741,34 @@ const cashTotal = computed(() => {
                                 <td>Receiving</td>
                             </tr>
 
-                            <tr v-for="index in 11" :key="index">
+                            <tr v-for="(row, index) in sheet.omni" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.sending" />
                                 </td>
 
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.receiving" />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Sending</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.omni)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Receiving</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.omni)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Last Balance</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="extractLastBalance(sheet.omni)" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -664,34 +794,34 @@ const cashTotal = computed(() => {
                                 <td>Receiving</td>
                             </tr>
 
-                            <tr v-for="index in 11" :key="index">
+                            <tr v-for="(row, index) in sheet.easypaisa" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.sending" />
                                 </td>
 
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.receiving" />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Sending</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.easypaisa)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Receiving</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.easypaisa)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Last Balance</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="extractLastBalance(sheet.easypaisa)" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -717,34 +847,34 @@ const cashTotal = computed(() => {
                                 <td>Receiving</td>
                             </tr>
 
-                            <tr v-for="index in 11" :key="index">
+                            <tr v-for="(row, index) in sheet.jazzcash" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.sending" />
                                 </td>
 
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.receiving" />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Sending</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.jazzcash)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Receiving</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.jazzcash)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Last Balance</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="extractLastBalance(sheet.jazzcash)" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -770,34 +900,34 @@ const cashTotal = computed(() => {
                                 <td>Receiving</td>
                             </tr>
 
-                            <tr v-for="index in 11" :key="index">
+                            <tr v-for="(row, index) in sheet.epaccount" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.sending" />
                                 </td>
 
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.receiving" />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Sending</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.epaccount)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Receiving</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.epaccount)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Last Balance</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="extractLastBalance(sheet.epaccount)" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -808,7 +938,7 @@ const cashTotal = computed(() => {
                     <table>
                         <tbody>
                             <tr>
-                                <th colspan="2">JC Account 0307</th>
+                                <th colspan="2">JC Merchant Account</th>
                             </tr>
 
                             <tr>
@@ -823,34 +953,34 @@ const cashTotal = computed(() => {
                                 <td>Receiving</td>
                             </tr>
 
-                            <tr v-for="index in 11" :key="index">
+                            <tr v-for="(row, index) in sheet.jcaccount" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.sending" />
                                 </td>
 
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.receiving" />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Sending</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.jcaccount)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Receiving</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.jcaccount)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Last Balance</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="extractLastBalance(sheet.jcaccount)" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -867,52 +997,59 @@ const cashTotal = computed(() => {
                             <tr>
                                 <td class="text-sm">UBL Omni Rec</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.omni)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="text-sm">EasyPaisa Rec</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.easypaisa)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="text-sm">JazzCash Rec</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.jazzcash)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="text-sm">EP AC 0333 Rec</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.epaccount)" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
-                                <td class="text-sm">JC AC 0307 Rec</td>
+                                <td class="text-sm">JC Merchant Account</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalReceiving(sheet.jcaccount)" type="number" disabled />
                                 </td>
                             </tr>
 
-                            <tr v-for="index in 10" :key="index">
+                            <tr v-for="(row, index) in sheet.manualpurchasing" :key="index">
                                 <td>
-                                    <input type="text" />
+                                    <input type="text" v-model="row.name" />
                                 </td>
 
                                 <td>
-                                    <input type="number" />
+                                    <input type="number" v-model.number="row.amount" />
                                 </td>
                             </tr>
 
                             <tr>
-                                <td>Total</td>
+                                <td>Manual Purchasing Total</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="manualPurchasingTotal" type="number" disabled />
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Total Purchsing</td>
+                                <td>
+                                    <input :value="purchasingTotal" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
@@ -999,42 +1136,45 @@ const cashTotal = computed(() => {
                             <tr>
                                 <td>Previous Cash</td>
                                 <td>
-                                    <input type="number" />
+                                    <input v-model.number="sheet.previousCash" type="number" />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Today Cash</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="cashInfoTotal" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Total Amount</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="n(sheet.previousCash) + cashInfoTotal" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Recovery &amp; Purchasing</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="purchasingTotal" type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Remaining Cash</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="(n(sheet.previousCash) + cashInfoTotal) - purchasingTotal"
+                                        type="number" disabled />
                                 </td>
                             </tr>
 
                             <tr>
                                 <td>Difference</td>
                                 <td>
-                                    <input type="number" readonly />
+                                    <input
+                                        :value="((n(sheet.previousCash) + cashInfoTotal) - purchasingTotal) - cashTotal"
+                                        type="number" readonly />
                                 </td>
                             </tr>
                         </tbody>
@@ -1071,67 +1211,60 @@ const cashTotal = computed(() => {
                             <tr>
                                 <th colspan="2">Cash Info</th>
                             </tr>
-
                             <tr>
                                 <td>UBL Omni</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.omni)" type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>EasyPaisa</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.easypaisa)" type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>JazzCash</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.jazzcash)" type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>EasyPaisa &amp; JazzCash Accounts</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="getTotalSending(sheet.epaccount) +
+                                        getTotalSending(sheet.jcaccount)
+                                        " type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>Recovery</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="recoveryTotal" type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>Card</td>
                                 <td>
                                     <input :value="100 * n(sheet.sellCards)" type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>EasyLoad</td>
                                 <td>
                                     <input :value="totalELoad" type="number" disabled />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>Extra</td>
                                 <td>
                                     <input v-model.number="sheet.extra" type="number" />
                                 </td>
                             </tr>
-
                             <tr>
                                 <td>Total</td>
                                 <td>
-                                    <input type="number" disabled />
+                                    <input :value="cashInfoTotal" type="number" disabled />
                                 </td>
                             </tr>
                         </tbody>
