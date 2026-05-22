@@ -236,48 +236,6 @@ const isPureNumber = (val: string | number | null | undefined) => {
     return false;
 };
 
-const getTotalSending = (
-    entries: { sending: string; receiving: string }[]
-) => {
-    return entries.reduce((sum, entry) => {
-        return sum + (isPureNumber(entry.sending)
-            ? Number(entry.sending)
-            : 0);
-    }, 0);
-};
-
-const getTotalReceiving = (
-    entries: { sending: string; receiving: string }[]
-) => {
-    return entries.reduce((sum, entry) => {
-        return sum + (isPureNumber(entry.receiving)
-            ? Number(entry.receiving)
-            : 0);
-    }, 0);
-};
-
-const extractLastBalance = (
-    entries: { sending: string; receiving: string }[]
-) => {
-    const regex = /b\s+(\d+)/i;
-
-    for (let i = entries.length - 1; i >= 0; i--) {
-        const sendMatch = regex.exec(entries[i]?.sending || "");
-
-        if (sendMatch) {
-            return Number(sendMatch[1]);
-        }
-
-        const receiveMatch = regex.exec(entries[i]?.receiving || "");
-
-        if (receiveMatch) {
-            return Number(receiveMatch[1]);
-        }
-    }
-
-    return null;
-};
-
 // Header
 const dateTime = ref({
     date: "",
@@ -380,6 +338,48 @@ const recoveryTotal = computed(() => {
     );
 });
 
+const getTotalSending = (
+    entries: { sending: string; receiving: string }[]
+) => {
+    return entries.reduce((sum, entry) => {
+        return sum + (isPureNumber(entry.sending)
+            ? Number(entry.sending)
+            : 0);
+    }, 0);
+};
+
+const getTotalReceiving = (
+    entries: { sending: string; receiving: string }[]
+) => {
+    return entries.reduce((sum, entry) => {
+        return sum + (isPureNumber(entry.receiving)
+            ? Number(entry.receiving)
+            : 0);
+    }, 0);
+};
+
+const extractLastBalance = (
+    entries: { sending: string; receiving: string }[]
+) => {
+    const regex = /b\s+(\d+)/i;
+
+    for (let i = entries.length - 1; i >= 0; i--) {
+        const sendMatch = regex.exec(entries[i]?.sending || "");
+
+        if (sendMatch) {
+            return Number(sendMatch[1]);
+        }
+
+        const receiveMatch = regex.exec(entries[i]?.receiving || "");
+
+        if (receiveMatch) {
+            return Number(receiveMatch[1]);
+        }
+    }
+
+    return null;
+};
+
 const purchasingTotal = computed(() => {
     return (
         getTotalReceiving(sheet.omni) +
@@ -440,7 +440,6 @@ const handleDownloadPDF = async () => {
 
     if (!element) return;
 
-    // Hide buttons while generating PDF
     const noPrintEls = document.querySelectorAll(".no-print");
 
     noPrintEls.forEach((el) => {
@@ -454,7 +453,6 @@ const handleDownloadPDF = async () => {
             backgroundColor: "#ffffff",
         });
 
-        // Show buttons again
         noPrintEls.forEach((el) => {
             (el as HTMLElement).style.display = "";
         });
@@ -525,7 +523,6 @@ const handleDownloadPDF = async () => {
         });
     }
 };
-
 </script>
 
 <template>
